@@ -16,6 +16,7 @@
 """NVUE selective vrf route leaking generator."""
 
 from capirca.lib import aclgenerator
+from capirca.lib.nacaddr import IPv4, IPv6
 
 _PLATFORM = 'nvue-selective-vrf-route-leaking'
 
@@ -40,14 +41,22 @@ class Term(aclgenerator.Term):
         if not self.term.source_vrf or not self.term.destination_vrf:
             return ''
 
-        common = "router policy prefix-list PL4{}to{}".format(self.term.source_vrf, self.term.destination_vrf)
-        ret_str.append("unset {}".format(common))
-        ret_str.append("set {} type ipv4".format(common))
-        ret_str.append("unset {}".format(common))
-        ret_str.append("set {} type ipv6".format(common))
+        common = "router policy prefix-list PL{{}}{}to{}".format(self.term.source_vrf, self.term.destination_vrf)
+        ret_str.append("unset {}".format(common.format(4)))
+        ret_str.append("set {} type ipv4".format(common.format(4)))
+        ret_str.append("unset {}".format(common.format(6)))
+        ret_str.append("set {} type ipv6".format(common.format(6)))
+        i = 1
         for address in self.term.destination_address:
-            ret_str.append("set {} rule XXX match {}".format(common, address))
-            ret_str.append("set {} rule XXX action permit".format(common))
+            if isinstance(address, IPv4):
+                inet = 4
+            elif isinstance(address, IPv6):
+                inet = 6
+            else:
+                assert False
+            ret_str.append("set {} rule {} match {}".format(common.format(inet), i, address))
+            ret_str.append("set {} rule {} action permit".format(common.format(inet), i))
+            i += 1
 
 # this currently fails (see cumulus role and mellanox case)
         ret_str.append("set router policy route-map {0}to{1} rule 10 match ip-prefix-list PL6{0}to{1}".format(self.term.source_vrf, self.term.destination_vrf))
