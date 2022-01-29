@@ -15,9 +15,6 @@
 
 """NVUE selective vrf route leaking generator."""
 
-import datetime
-import logging
-
 from capirca.lib import aclgenerator
 
 _PLATFORM = 'nvue-selective-vrf-route-leaking'
@@ -34,6 +31,8 @@ class Term(aclgenerator.Term):
     def __init__(self, term):
         super().__init__(term)
         self.term = term
+        self.term.source_vrf = None
+        self.term.destination_vrf = None
 
     def __str__(self):
         ret_str = []
@@ -87,19 +86,18 @@ class NVUESelectiveVRFRouteLeaking(aclgenerator.ACLGenerator):
             },
         }
 
-    return supported_tokens, supported_sub_tokens
+        return supported_tokens, supported_sub_tokens
+
+    #  def _TranslatePolicy(self, pol, exp_info):
+        #  self.lines = []
+        #  for header, terms in pol.filters:
+            #  pass
 
     def _TranslatePolicy(self, pol, exp_info):
-        self.lines = []
-
-        for header, terms in pol.filters:
-            pass
-
-    def __str__(self):
-        target = []
-
+        self.target = []
         for header, terms in pol.filters:
             for term in terms:
-                target.append(str(term))
+                self.target.append(str(Term(term)))
 
-        return '\n'.join(target)
+    def __str__(self):
+        return '\n'.join(self.target)
