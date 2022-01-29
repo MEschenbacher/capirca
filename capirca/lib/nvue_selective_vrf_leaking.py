@@ -31,14 +31,14 @@ class Term(aclgenerator.Term):
     def __init__(self, term):
         super().__init__(term)
         self.term = term
-        self.term.source_vrf = next(iter([ x.parent_token for x in  self.term.source_address if hasattr(x, 'parent_token')]), None).replace('VRF_', '')
-        self.term.destination_vrf = next(iter([ x.parent_token for x in  self.term.destination_address if hasattr(x, 'parent_token')]), None).replace('VRF_', '')
+        self.term.source_vrf = next(iter([ x.parent_token for x in  self.term.source_address if hasattr(x, 'parent_token')]), '').replace('VRF_', '')
+        self.term.destination_vrf = next(iter([ x.parent_token for x in  self.term.destination_address if hasattr(x, 'parent_token')]), '').replace('VRF_', '')
 
     def __str__(self):
         ret_str = []
 
         if not self.term.source_vrf or not self.term.destination_vrf:
-            return
+            return ''
 
         common = "router policy prefix-list PL4{}to{}".format(self.term.source_vrf, self.term.destination_vrf)
         ret_str.append("unset {}".format(common))
