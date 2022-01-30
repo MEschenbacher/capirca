@@ -24,16 +24,30 @@ _PLATFORM = 'nvue-selective-vrf-route-leaking'
 class Term(aclgenerator.Term):
     """A single vrf leaking term, mostly used for the __str__() method.
 
-  Args:
-    term: policy.Term object.
-    filter_type: IP address version number.
-  """
+    Args:
+        term: policy.Term object.
+        filter_type: IP address version number.
+    """
+    def _BuildTokens(self):
+        supported_tokens, supported_sub_tokens = super()._BuildTokens()
+        #  supported_sub_tokens.update({'option': {'source-vrf', 'destination-vrf'}})
+        return supported_tokens, supported_sub_tokens
 
     def __init__(self, term):
         super().__init__(term)
         self.term = term
-        self.term.source_vrf = next(iter([ x.parent_token for x in  self.term.source_address if hasattr(x, 'parent_token')]), '').replace('VRF_', '')
-        self.term.destination_vrf = next(iter([ x.parent_token for x in  self.term.destination_address if hasattr(x, 'parent_token')]), '').replace('VRF_', '')
+        if len(self.term.option) % 2 != 0:
+            raise Exception("Options have an uneven number of arguments")
+        i = 0
+        while i < len(self.term.option):
+            if self.term.option[i] == 'source-vrf':
+                self.term.source_vrf = self.term.option[i + 1]
+                i += 2
+            elif self.term.option[i] == 'destination-vrf':
+                self.term.destination_vrf = self.term.option[i + 1]
+                i += 2
+            else:
+                assert False
 
     def __str__(self):
         ret_str = []
@@ -62,6 +76,7 @@ class Term(aclgenerator.Term):
         ret_str.append("set router policy route-map {0}to{1} rule 10 match ip-prefix-list PL6{0}to{1}".format(self.term.source_vrf, self.term.destination_vrf))
         ret_str.append("set router policy route-map {0}to{1} rule 10 action accept".format(self.term.source_vrf, self.term.destination_vrf))
         ret_str.append("set router policy route-map {0}to{1} rule 20 match ip-prefix-list PL4{0}to{1}".format(self.term.source_vrf, self.term.destination_vrf))
+        ret_str.append("set router policy route-map {0}to{1} rule 20 action accept".format(self.term.source_vrf, self.term.destination_vrf))
         ret_str.append("set router policy route-map {0}to{1} rule 30 action deny".format(self.term.source_vrf, self.term.destination_vrf))
         ret_str.append("set vrf {} router bgp address-family ipv4-unicast route-import from-vrf list {}".format(self.term.source_vrf, self.term.destination_vrf))
         ret_str.append("set vrf {} router bgp address-family ipv6-unicast route-import from-vrf list {}".format(self.term.source_vrf, self.term.destination_vrf))
