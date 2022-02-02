@@ -13,6 +13,7 @@ class Term(iptables.Term):
 
 
 class Cumulus(iptables.Iptables):
+    _PLATFORM = 'cumulus'
     SUFFIX = '.ipt-cumulus'
 
     def __init__(self, *args, **kwargs):
