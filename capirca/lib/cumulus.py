@@ -16,11 +16,11 @@ class Term(iptables.Term):
 
 class Cumulus(iptables.Iptables):
   _PLATFORM = 'cumulus'
-  SUFFIX = '.ipt-cumulus'
+  SUFFIX = '.cumulus'
   _TERM = Term
 
   def __init__(self, pol, exp_info):
-    # call once
+    # we need to call __init__ once and safe exp_info
     super().__init__(pol, exp_info)
     self.pol = pol
     self.exp_info = exp_info
