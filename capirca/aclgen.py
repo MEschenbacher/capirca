@@ -53,6 +53,7 @@ from capirca.lib import policy
 from capirca.lib import speedway
 from capirca.lib import srxlo
 from capirca.lib import windows_advfirewall
+from capirca.lib import cumulus as cumulus_gen
 
 from capirca.utils import config
 
@@ -193,6 +194,7 @@ def RenderFile(base_directory: str, input_file: pathlib.Path,
   xacl = False
   paloalto = False
   k8s_pol = False
+  cumulus = False
 
   try:
     with open(input_file) as f:
@@ -273,6 +275,8 @@ def RenderFile(base_directory: str, input_file: pathlib.Path,
     gca = copy.deepcopy(pol)
   if 'k8s' in platforms:
     k8s_pol = copy.deepcopy(pol)
+  if 'cumulus' in platforms:
+    cumulus = copy.deepcopy(pol)
 
   acl_obj: aclgenerator.ACLGenerator
 
@@ -408,13 +412,16 @@ def RenderFile(base_directory: str, input_file: pathlib.Path,
       RenderACL(
           str(acl_obj), acl_obj.SUFFIX, output_directory, input_file,
           write_files)
-
     if k8s_pol:
       acl_obj = k8s.K8s(k8s_pol, exp_info)
       RenderACL(
           str(acl_obj), acl_obj.SUFFIX, output_directory, input_file,
           write_files)
-
+    if cumulus:
+      acl_obj = cumulus_gen.Cumulus(cumulus, exp_info)
+      RenderACL(
+          str(acl_obj), acl_obj.SUFFIX, output_directory, input_file,
+          write_files)
   # TODO(robankeny) add additional errors.
   except (
       juniper.Error,
