@@ -54,6 +54,7 @@ from capirca.lib import speedway
 from capirca.lib import srxlo
 from capirca.lib import windows_advfirewall
 from capirca.lib import cumulus as cumulus_gen
+from capirca.lib import nvue_selective_vrf_leaking
 
 from capirca.utils import config
 
@@ -195,6 +196,7 @@ def RenderFile(base_directory: str, input_file: pathlib.Path,
   paloalto = False
   k8s_pol = False
   cumulus = False
+  nvue = False
 
   try:
     with open(input_file) as f:
@@ -277,6 +279,8 @@ def RenderFile(base_directory: str, input_file: pathlib.Path,
     k8s_pol = copy.deepcopy(pol)
   if 'cumulus' in platforms:
     cumulus = copy.deepcopy(pol)
+  if 'nvue-selective-vrf-route-leaking' in platforms:
+    nvue = copy.deepcopy(pol)
 
   acl_obj: aclgenerator.ACLGenerator
 
@@ -419,6 +423,11 @@ def RenderFile(base_directory: str, input_file: pathlib.Path,
           write_files)
     if cumulus:
       acl_obj = cumulus_gen.Cumulus(cumulus, exp_info)
+      RenderACL(
+          str(acl_obj), acl_obj.SUFFIX, output_directory, input_file,
+          write_files)
+    if nvue:
+      acl_obj = nvue_selective_vrf_leaking.NVUESelectiveVRFRouteLeaking(nvue, exp_info)
       RenderACL(
           str(acl_obj), acl_obj.SUFFIX, output_directory, input_file,
           write_files)
