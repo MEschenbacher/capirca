@@ -841,28 +841,6 @@ class PacketFilterTest(absltest.TestCase):
         'PROD_NETWORK_EXTREAMLY_LONG_VERY_NO_GOOD_NAME')
     self.naming.GetServiceByProto.assert_called_once_with('DNS', 'tcp')
 
-  def testTableDuplicateShortNameError(self):
-    prod_network = nacaddr.IP('10.0.0.0/8')
-    prod_network.parent_token = 'PROD_NETWORK_EXTREAMLY_LONG_VERY_NO_GOOD_NAME'
-    prod_network_two = nacaddr.IP('172.0.0.0/8')
-    prod_network_two.parent_token = 'PROD_NETWORK_EXTREAMLY_LONG_VERY_GOOD_NAME'
-    self.naming.GetNetAddr.side_effect = [
-        [prod_network], [prod_network_two]]
-    self.naming.GetServiceByProto.return_value = ['25']
-
-    self.assertRaises(
-        packetfilter.DuplicateShortenedTableNameError,
-        packetfilter.PacketFilter.__init__,
-        packetfilter.PacketFilter.__new__(packetfilter.PacketFilter),
-        policy.ParsePolicy(
-            GOOD_HEADER_DIRECTIONAL + DUPLICATE_DIFFERENT_LONG_NAME_TERM,
-            self.naming),
-        EXP_INFO)
-    self.naming.GetNetAddr.assert_has_calls([
-        mock.call('PROD_NETWORK_EXTREAMLY_LONG_VERY_NO_GOOD_NAME'),
-        mock.call('PROD_NETWORK_EXTREAMLY_LONG_VERY_GOOD_NAME')])
-    self.naming.GetServiceByProto.assert_called_once_with('SMTP', 'tcp')
-
   def testTableSameLongNameSameFilter(self):
     prod_network = nacaddr.IP('10.0.0.0/8')
     prod_network.parent_token = 'PROD_NETWORK_EXTREAMLY_LONG_VERY_NO_GOOD_NAME'
@@ -923,56 +901,6 @@ class PacketFilterTest(absltest.TestCase):
     self.naming.GetNetAddr.assert_has_calls([
         mock.call('PROD_NETWORK_EXTREAMLY_LONG_VERY_NO_GOOD_NAME'),
         mock.call('PROD_NETWORK_EXTREAMLY_LONG_VERY_NO_GOOD_NAME')])
-    self.naming.GetServiceByProto.assert_has_calls([
-        mock.call('DNS', 'tcp'),
-        mock.call('DNS', 'udp')])
-
-  def testTableDiffObjectsShortenedAndNonShortened(self):
-    prod_network = nacaddr.IP('10.0.0.0/8')
-    prod_network.parent_token = 'PROD_NETWORK_EXTREAMLY_LONG_VERY_NO_GOOD_NAME'
-    prod_network_two = nacaddr.IP('172.0.0.0/8')
-    prod_network_two.parent_token = 'PROD_NETWORK_EXTREAMLY_LONG_VER'
-    self.naming.GetNetAddr.side_effect = [
-        [prod_network], [prod_network_two]]
-    self.naming.GetServiceByProto.return_value = ['53']
-
-    self.assertRaises(
-        packetfilter.DuplicateShortenedTableNameError,
-        packetfilter.PacketFilter.__init__,
-        packetfilter.PacketFilter.__new__(packetfilter.PacketFilter),
-        policy.ParsePolicy(
-            GOOD_HEADER_DIRECTIONAL + LONG_NAME_TERM_DNS_TCP +
-            NON_SHORTENED_LONG_NAME_TERM_DNS_UDP,
-            self.naming),
-        EXP_INFO)
-    self.naming.GetNetAddr.assert_has_calls([
-        mock.call('PROD_NETWORK_EXTREAMLY_LONG_VERY_NO_GOOD_NAME'),
-        mock.call('PROD_NETWORK_EXTREAMLY_LONG_VER')])
-    self.naming.GetServiceByProto.assert_has_calls([
-        mock.call('DNS', 'tcp'),
-        mock.call('DNS', 'udp')])
-
-  def testTableDuplicateShortNameErrorDiffFilter(self):
-    prod_network = nacaddr.IP('10.0.0.0/8')
-    prod_network.parent_token = 'PROD_NETWORK_EXTREAMLY_LONG_VERY_NO_GOOD_NAME'
-    prod_network_two = nacaddr.IP('172.0.0.0/8')
-    prod_network_two.parent_token = 'PROD_NETWORK_EXTREAMLY_LONG_VER'
-    self.naming.GetNetAddr.side_effect = [
-        [prod_network], [prod_network_two]]
-    self.naming.GetServiceByProto.return_value = ['53']
-
-    self.assertRaises(
-        packetfilter.DuplicateShortenedTableNameError,
-        packetfilter.PacketFilter.__init__,
-        packetfilter.PacketFilter.__new__(packetfilter.PacketFilter),
-        policy.ParsePolicy(
-            GOOD_HEADER_DIRECTIONAL + LONG_NAME_TERM_DNS_TCP +
-            GOOD_HEADER_DIRECTIONAL + NON_SHORTENED_LONG_NAME_TERM_DNS_UDP,
-            self.naming),
-        EXP_INFO)
-    self.naming.GetNetAddr.assert_has_calls([
-        mock.call('PROD_NETWORK_EXTREAMLY_LONG_VERY_NO_GOOD_NAME'),
-        mock.call('PROD_NETWORK_EXTREAMLY_LONG_VER')])
     self.naming.GetServiceByProto.assert_has_calls([
         mock.call('DNS', 'tcp'),
         mock.call('DNS', 'udp')])

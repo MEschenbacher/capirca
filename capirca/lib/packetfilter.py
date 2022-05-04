@@ -33,10 +33,6 @@ class DuplicateTermError(Error):
   """Raised when duplication of term names are detected."""
 
 
-class DuplicateShortenedTableNameError(Error):
-  """Raised when a duplicate shortened table name is found."""
-
-
 class UnsupportedProtoError(Error):
   """Raised when a protocol is not supported."""
 
@@ -417,7 +413,6 @@ class PacketFilter(aclgenerator.ACLGenerator):
   def _TranslatePolicy(self, pol, exp_info):
     self.pf_policies = []
     self.address_book = {}
-    self.def_short_to_long = {}
     current_date = datetime.datetime.utcnow().date()
     exp_info_date = current_date + datetime.timedelta(weeks=exp_info)
 
@@ -477,17 +472,6 @@ class PacketFilter(aclgenerator.ACLGenerator):
         for source_addr in term.source_address:
           src_token = source_addr.parent_token[:self._DEF_MAX_LENGTH]
 
-          if (src_token in self.def_short_to_long and
-              self.def_short_to_long[src_token] != source_addr.parent_token):
-            raise DuplicateShortenedTableNameError(
-                'There is a shortened name conflict between names %s and %s '
-                '(different named objects would conflict when shortened to %s)'
-                % (self.def_short_to_long[src_token],
-                   source_addr.parent_token,
-                   src_token))
-          else:
-            self.def_short_to_long[src_token] = source_addr.parent_token
-
           if src_token not in self.address_book:
             self.address_book[src_token] = set([source_addr])
           else:
@@ -495,17 +479,6 @@ class PacketFilter(aclgenerator.ACLGenerator):
 
         for dest_addr in term.destination_address:
           dst_token = dest_addr.parent_token[:self._DEF_MAX_LENGTH]
-
-          if (dst_token in self.def_short_to_long and
-              self.def_short_to_long[dst_token] != dest_addr.parent_token):
-            raise DuplicateShortenedTableNameError(
-                'There is a shortened name conflict between names %s and %s '
-                '(different named objects would conflict when shortened to %s)'
-                %(self.def_short_to_long[dst_token],
-                  dest_addr.parent_token,
-                  dst_token))
-          else:
-            self.def_short_to_long[dst_token] = dest_addr.parent_token
 
           if dst_token not in self.address_book:
             self.address_book[dst_token] = set([dest_addr])
