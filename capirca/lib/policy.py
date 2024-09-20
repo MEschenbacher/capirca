@@ -740,6 +740,12 @@ class Term:
       if sorted(self.destination_zone) is not sorted(other.destination_zone):
         return False
 
+    if self.source_interface and self.source_interface != other.source_interface:
+      return False
+
+    if self.destination_interface and self.destination_interface != other.destination_interface:
+      return False
+
     # we have containment
     return True
 
