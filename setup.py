@@ -55,6 +55,7 @@ setuptools.setup(
         'mock',
         'six',
         'PyYAML',
+        'typing_extensions',
     ],
     python_requires='>=3.6',
 )
